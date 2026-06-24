@@ -5,38 +5,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#f6d8d3" />
   <title>Pathway — WebGL Laser Puzzle</title>
+  <meta name="description" content="Rotate glass lenses, bend the beam, and light the bulb across 30 handcrafted WebGL puzzle levels." />
+  <meta property="og:title" content="Pathway — WebGL Laser Puzzle" />
+  <meta property="og:description" content="A calm laser-reflection puzzle about glass, light, and alignment." />
+  <meta property="og:type" content="website" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Ole&family=Marcellus&display=swap" rel="stylesheet" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <main id="appShell" aria-label="Pathway WebGL laser puzzle">
     <canvas id="gameCanvas" aria-label="Pathway puzzle board"></canvas>
 
-    <section id="loadingScreen" class="loadingScreen" aria-label="Loading Pathway">
-      <div class="loadingTitle">Pathway</div>
-      <div class="loadingGlyph" aria-hidden="true">
-        <span class="loadingNode loadingSource"></span>
-        <span class="loadingRay loadingRayA"></span>
-        <span class="loadingLens"></span>
-        <span class="loadingRay loadingRayB"></span>
-        <span class="loadingNode loadingBulb"></span>
-        <span class="loadingGlint"></span>
-      </div>
-      <div class="loadingText">focusing light</div>
-    </section>
 
     <section id="startScreen" class="gameStart" aria-label="Start screen">
       <div class="startMark">LASER PUZZLE</div>
       <h1 class="startTitle">Pathway</h1>
-      <div class="startProof" aria-hidden="true">
-        <div class="proofCell proofSource"><span></span></div>
-        <div class="proofBeam proofBeamOne"></div>
-        <div class="proofCell proofGlass"><span></span></div>
-        <div class="proofBeam proofBeamTwo"></div>
-        <div class="proofCell proofBulb"><span></span></div>
-      </div>
       <p class="startMechanic">Rotate glass. Bend light. Hit the bulb.</p>
       <button id="startButton" class="gameButton bigButton" type="button">Set the Beam</button>
     </section>

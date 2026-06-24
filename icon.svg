@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Pathway icon">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="45%" r="70%">
+      <stop offset="0%" stop-color="#fff8ef"/>
+      <stop offset="55%" stop-color="#f4d9cf"/>
+      <stop offset="100%" stop-color="#cfdff5"/>
+    </radialGradient>
+    <linearGradient id="beam" x1="0" x2="1" y1="0" y2="0">
+      <stop offset="0%" stop-color="#6f4bd6"/>
+      <stop offset="100%" stop-color="#ffd779"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <circle cx="122" cy="258" r="42" fill="#fff7ed" stroke="#7257c9" stroke-width="18"/>
+  <path d="M168 258h142" stroke="url(#beam)" stroke-width="24" stroke-linecap="round"/>
+  <path d="M317 193c48 35 49 94 0 130" fill="none" stroke="#ffffff" stroke-width="30" stroke-linecap="round" opacity=".84"/>
+  <path d="M329 194c-38 42-38 87 0 130" fill="none" stroke="#755bd6" stroke-width="14" stroke-linecap="round" opacity=".9"/>
+  <path d="M349 258h52" stroke="url(#beam)" stroke-width="24" stroke-linecap="round"/>
+  <circle cx="420" cy="258" r="43" fill="#fff4c7" stroke="#d89a36" stroke-width="15"/>
+  <circle cx="420" cy="258" r="17" fill="#fffef4"/>
+</svg>
