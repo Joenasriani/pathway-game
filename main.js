@@ -1661,51 +1661,52 @@
     if (!ctx) return;
 
     const now = ctx.currentTime;
-    const duration = Math.max(1.18, state.victoryDuration / 1000);
-    const peakTime = now + duration * 0.96;
+    const duration = state.victoryDuration / 1000;
+    const arrivalTime = now + duration;
     const bus = ctx.createGain();
     const lp = ctx.createBiquadFilter();
     const presence = ctx.createBiquadFilter();
 
-    // Beam draw must feel like a true upward crescendo: pitch, brightness,
-    // and volume all rise until the travelling beam reaches the bulb.
+    // The sound envelope is locked to drawVictoryBeam(): same duration, same
+    // travel finish. The crescendo now peaks exactly when the beam head reaches
+    // the bulb, then releases after the hit instead of continuing late.
     bus.gain.setValueAtTime(0.0001, now);
-    bus.gain.exponentialRampToValueAtTime(0.018, now + 0.10);
-    bus.gain.linearRampToValueAtTime(0.070, now + duration * 0.52);
-    bus.gain.linearRampToValueAtTime(0.142, now + duration * 0.82);
-    bus.gain.linearRampToValueAtTime(0.190, peakTime);
-    bus.gain.exponentialRampToValueAtTime(0.0001, now + duration + 0.16);
+    bus.gain.exponentialRampToValueAtTime(0.016, now + duration * 0.08);
+    bus.gain.linearRampToValueAtTime(0.058, now + duration * 0.40);
+    bus.gain.linearRampToValueAtTime(0.125, now + duration * 0.72);
+    bus.gain.linearRampToValueAtTime(0.205, arrivalTime);
+    bus.gain.exponentialRampToValueAtTime(0.0001, arrivalTime + 0.18);
 
     lp.type = 'lowpass';
-    lp.frequency.setValueAtTime(520, now);
-    lp.frequency.exponentialRampToValueAtTime(1850, now + duration * 0.50);
-    lp.frequency.exponentialRampToValueAtTime(7600, peakTime);
+    lp.frequency.setValueAtTime(500, now);
+    lp.frequency.exponentialRampToValueAtTime(1650, now + duration * 0.42);
+    lp.frequency.exponentialRampToValueAtTime(8200, arrivalTime);
     lp.Q.value = 0.16;
 
     presence.type = 'peaking';
-    presence.frequency.setValueAtTime(980, now);
-    presence.frequency.exponentialRampToValueAtTime(3300, peakTime);
+    presence.frequency.setValueAtTime(920, now);
+    presence.frequency.exponentialRampToValueAtTime(3600, arrivalTime);
     presence.Q.value = 0.34;
-    presence.gain.value = 2.2;
+    presence.gain.value = 2.4;
 
     const makeOsc = ({ type, startFreq, endFreq, start = 0, stop = duration, gain = 0.045, detune = 0 }) => {
       const t0 = now + start;
-      const t1 = now + stop;
+      const t1 = Math.min(now + stop, arrivalTime);
       const osc = ctx.createOscillator();
       const amp = ctx.createGain();
       osc.type = type;
       osc.frequency.setValueAtTime(startFreq, t0);
-      osc.frequency.exponentialRampToValueAtTime(Math.max(1, endFreq), Math.max(t0 + 0.08, t1 - 0.02));
+      osc.frequency.exponentialRampToValueAtTime(Math.max(1, endFreq), arrivalTime);
       osc.detune.setValueAtTime(detune, t0);
       amp.gain.setValueAtTime(0.0001, t0);
-      amp.gain.exponentialRampToValueAtTime(gain * 0.18, t0 + 0.08);
-      amp.gain.linearRampToValueAtTime(gain * 0.58, now + duration * 0.66);
-      amp.gain.linearRampToValueAtTime(gain, peakTime);
-      amp.gain.exponentialRampToValueAtTime(0.0001, now + duration + 0.14);
+      amp.gain.exponentialRampToValueAtTime(gain * 0.16, Math.min(t0 + 0.08, arrivalTime - 0.02));
+      amp.gain.linearRampToValueAtTime(gain * 0.48, now + duration * 0.58);
+      amp.gain.linearRampToValueAtTime(gain, arrivalTime);
+      amp.gain.exponentialRampToValueAtTime(0.0001, arrivalTime + 0.16);
       osc.connect(amp);
       amp.connect(bus);
       osc.start(t0);
-      osc.stop(now + duration + 0.18);
+      osc.stop(arrivalTime + 0.20);
     };
 
     makeOsc({ type: 'sine', startFreq: 73.42, endFreq: 174.61, gain: 0.052, detune: -2 });
@@ -1717,17 +1718,17 @@
     const air = ctx.createBufferSource();
     const airFilter = ctx.createBiquadFilter();
     const airAmp = ctx.createGain();
-    air.buffer = createNoiseBuffer(ctx, duration + 0.18);
+    air.buffer = createNoiseBuffer(ctx, duration + 0.22);
     airFilter.type = 'bandpass';
     airFilter.frequency.setValueAtTime(300, now);
-    airFilter.frequency.exponentialRampToValueAtTime(1450, now + duration * 0.52);
-    airFilter.frequency.exponentialRampToValueAtTime(5200, peakTime);
+    airFilter.frequency.exponentialRampToValueAtTime(1400, now + duration * 0.48);
+    airFilter.frequency.exponentialRampToValueAtTime(5600, arrivalTime);
     airFilter.Q.value = 0.10;
     airAmp.gain.setValueAtTime(0.0001, now);
-    airAmp.gain.linearRampToValueAtTime(0.010, now + duration * 0.32);
-    airAmp.gain.linearRampToValueAtTime(0.028, now + duration * 0.70);
-    airAmp.gain.linearRampToValueAtTime(0.052, peakTime);
-    airAmp.gain.exponentialRampToValueAtTime(0.0001, now + duration + 0.12);
+    airAmp.gain.linearRampToValueAtTime(0.010, now + duration * 0.30);
+    airAmp.gain.linearRampToValueAtTime(0.030, now + duration * 0.70);
+    airAmp.gain.linearRampToValueAtTime(0.058, arrivalTime);
+    airAmp.gain.exponentialRampToValueAtTime(0.0001, arrivalTime + 0.15);
 
     air.connect(airFilter);
     airFilter.connect(airAmp);
@@ -1736,7 +1737,7 @@
     presence.connect(lp);
     lp.connect(audioState.master);
     air.start(now);
-    air.stop(now + duration + 0.16);
+    air.stop(arrivalTime + 0.18);
   }
 
   function playLaserSwordSfx() {
@@ -2537,7 +2538,10 @@
     if (!state.solved || (!state.victoryActive && !state.victoryComplete)) return;
 
     const raw = state.victoryActive ? (now - state.victoryStart) / state.victoryDuration : 1;
-    const progress = clamp(easeOutCubic(raw), 0, 1);
+    // Use a linear travel clock so the visible beam head and the crescendo
+    // envelope finish together. Rotation animations still ease; the solve beam
+    // must be audio-synced, not visually fast-then-slow.
+    const progress = clamp(raw, 0, 1);
     if (raw >= 1) {
       state.victoryActive = false;
       state.victoryComplete = true;
@@ -2580,13 +2584,9 @@
       const level = currentLevel();
       const targetCenter = screenFromCell(level.target.col, level.target.row);
       const touchRadius = state.boardScale * 0.42;
-      if (!state.targetLit && Math.hypot(head.x - targetCenter.x, head.y - targetCenter.y) <= touchRadius) {
-        state.targetLit = true;
-        if (!state.targetLitSfxPlayed) {
-          state.targetLitSfxPlayed = true;
-          playLampOnSfx();
-        }
-      }
+      // Do not trigger the bulb/lamp SFX early by proximity. The lamp now fires
+      // at the exact end of the beam travel so the audible crescendo and visible
+      // beam animation land together.
       addCircle(head.x, head.y, state.boardScale * (0.16 + pulse * 0.025), colors.targetGlow, 36);
       addCircle(head.x, head.y, state.boardScale * 0.064, colors.victoryCore, 28);
     }
