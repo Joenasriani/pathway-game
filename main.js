@@ -1307,7 +1307,7 @@
     unlocked: false,
     lastTrigger: 0,
     musicStarted: false,
-    musicVolume: 0.36,
+    musicVolume: 0.78,
     sfxVolume: 0.92
   };
 
@@ -1424,20 +1424,31 @@
 
   function configureMusicElement() {
     if (!bgMusic) return;
-    bgMusic.volume = audioState.enabled ? audioState.musicVolume : 0;
     bgMusic.loop = true;
+    bgMusic.muted = !audioState.enabled;
+    bgMusic.volume = audioState.enabled ? audioState.musicVolume : 0;
+    bgMusic.setAttribute('playsinline', '');
   }
 
-  function startMusic() {
+  function startMusic({ restart = false } = {}) {
     if (!bgMusic || !audioState.enabled) return;
     configureMusicElement();
+    if (restart) {
+      try { bgMusic.currentTime = 0; } catch (_error) {}
+    }
     audioState.musicStarted = true;
     const playAttempt = bgMusic.play();
     if (playAttempt && typeof playAttempt.catch === 'function') {
       playAttempt.catch(() => {
-        // Mobile browsers may still block audio in rare cases; the next user gesture retries.
+        audioState.musicBlocked = true;
       });
     }
+  }
+
+  function unlockMusicFromGesture() {
+    if (state.mode !== 'play' || !audioState.enabled) return;
+    ensureAudio();
+    startMusic();
   }
 
   function pauseMusic() {
@@ -1835,6 +1846,46 @@
     return String(id).padStart(2, '0');
   }
 
+  function getPlaySafeFrame(cssW, cssH) {
+    const shellRect = canvas.getBoundingClientRect();
+    const landscape = cssW > cssH * 1.18;
+    const desktopWide = landscape && cssW >= 900;
+    const sidePad = desktopWide ? 36 : landscape ? 24 : 14;
+    const gap = desktopWide ? 18 : landscape ? 12 : 16;
+
+    const frame = {
+      left: sidePad,
+      right: cssW - sidePad,
+      top: 14,
+      bottom: cssH - 14
+    };
+
+    if (state.mode !== 'start') {
+      if (!topHud.classList.contains('hidden')) {
+        const hudRect = topHud.getBoundingClientRect();
+        frame.top = Math.max(frame.top, hudRect.bottom - shellRect.top + gap);
+      }
+
+      if (!bottomHud.classList.contains('hidden')) {
+        const barRect = bottomHud.getBoundingClientRect();
+        frame.bottom = Math.min(frame.bottom, barRect.top - shellRect.top - gap);
+      }
+    }
+
+    if (frame.right - frame.left < cssW * 0.54) {
+      frame.left = sidePad * 0.5;
+      frame.right = cssW - sidePad * 0.5;
+    }
+
+    if (frame.bottom - frame.top < cssH * 0.44) {
+      const emergencyGap = landscape ? 8 : 10;
+      frame.top = state.mode === 'start' ? 12 : Math.min(frame.top, cssH * 0.26);
+      frame.bottom = Math.max(frame.bottom, cssH - (bottomHud.classList.contains('hidden') ? 12 : 64) - emergencyGap);
+    }
+
+    return frame;
+  }
+
   function resize() {
     const dpr = clamp(window.devicePixelRatio || 1, 1, 2.5);
     const rect = canvas.getBoundingClientRect();
@@ -1854,15 +1905,20 @@
     const cssH = rect.height;
     const portrait = cssH > cssW * 1.08;
     const landscape = cssW > cssH * 1.18;
+    const desktopWide = landscape && cssW >= 900;
     const level = currentLevel();
-    const boardUnits = level.grid + 0.9;
-    const availableW = cssW * (landscape ? 0.50 : 0.90);
-    const availableH = cssH * (portrait ? 0.48 : 0.70);
+    const boardUnits = level.grid + 1.02;
+    const safe = getPlaySafeFrame(cssW, cssH);
+    const availableW = Math.max(1, safe.right - safe.left);
+    const availableH = Math.max(1, safe.bottom - safe.top);
     const scaleCSS = Math.min(availableW / boardUnits, availableH / boardUnits);
+    const maxScaleCSS = desktopWide ? 98 : landscape ? 86 : portrait ? 116 : 102;
+    const minReadableCSS = portrait ? 30 : landscape ? 20 : 26;
+    const fittedScaleCSS = Math.max(Math.min(scaleCSS, maxScaleCSS), Math.min(minReadableCSS, scaleCSS));
 
-    state.boardScale = clamp(scaleCSS, 38, 122) * dpr;
-    state.boardCenterX = width * (landscape ? 0.64 : 0.5);
-    state.boardCenterY = height * (portrait ? 0.60 : 0.55);
+    state.boardScale = fittedScaleCSS * dpr;
+    state.boardCenterX = ((safe.left + safe.right) * 0.5) * dpr;
+    state.boardCenterY = ((safe.top + safe.bottom) * 0.5) * dpr;
 
     gl.viewport(0, 0, width, height);
     recalculateBeam();
@@ -2230,7 +2286,7 @@
   function startGame() {
     ensureAudio();
     playStartSfx();
-    startMusic();
+    startMusic({ restart: true });
     state.mode = 'play';
     startScreen.classList.add('hidden');
     loadLevel(0);
@@ -2943,6 +2999,8 @@
     resetButton.addEventListener('click', resetLevel);
     if (soundButton) soundButton.addEventListener('click', toggleSound);
     nextButton.addEventListener('click', nextLevel);
+    document.addEventListener('pointerdown', unlockMusicFromGesture, { passive: true });
+    document.addEventListener('click', unlockMusicFromGesture, { passive: true });
     canvas.addEventListener('pointerdown', handlePointerDown, { passive: false });
     window.addEventListener('resize', resize);
     window.addEventListener('orientationchange', () => window.setTimeout(resize, 80));
