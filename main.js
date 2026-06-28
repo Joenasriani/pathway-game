@@ -1657,14 +1657,86 @@
   }
 
   function playVictoryBeamSfx() {
-    const pack = softLayerBus({ duration: 1.35, gain: 0.125, lowpass: 5000, resonance: 0.18 });
-    if (!pack) return;
-    const { ctx, now, bus } = pack;
-    // Long smooth optical draw under the laser hum.
-    connectSmoothOsc({ bus, ctx, now, freq: 110.00, endFreq: 220.00, duration: 1.22, gain: 0.052, type: 'sine', attack: 0.075, release: 0.60 });
-    connectSmoothOsc({ bus, ctx, now, freq: 220.00, endFreq: 440.00, duration: 1.12, gain: 0.036, type: 'triangle', start: 0.060, attack: 0.080, release: 0.55 });
-    connectSmoothOsc({ bus, ctx, now, freq: 554.37, endFreq: 987.77, duration: 0.92, gain: 0.016, type: 'sine', start: 0.220, attack: 0.100, release: 0.42 });
-    connectSmoothNoise({ bus, ctx, now, start: 0.050, duration: 0.96, gain: 0.024, from: 420, to: 1980, q: 0.12 });
+    const ctx = ensureAudio();
+    if (!ctx) return;
+
+    const now = ctx.currentTime;
+    const duration = Math.max(1.18, state.victoryDuration / 1000);
+    const peakTime = now + duration * 0.96;
+    const bus = ctx.createGain();
+    const lp = ctx.createBiquadFilter();
+    const presence = ctx.createBiquadFilter();
+
+    // Beam draw must feel like a true upward crescendo: pitch, brightness,
+    // and volume all rise until the travelling beam reaches the bulb.
+    bus.gain.setValueAtTime(0.0001, now);
+    bus.gain.exponentialRampToValueAtTime(0.018, now + 0.10);
+    bus.gain.linearRampToValueAtTime(0.070, now + duration * 0.52);
+    bus.gain.linearRampToValueAtTime(0.142, now + duration * 0.82);
+    bus.gain.linearRampToValueAtTime(0.190, peakTime);
+    bus.gain.exponentialRampToValueAtTime(0.0001, now + duration + 0.16);
+
+    lp.type = 'lowpass';
+    lp.frequency.setValueAtTime(520, now);
+    lp.frequency.exponentialRampToValueAtTime(1850, now + duration * 0.50);
+    lp.frequency.exponentialRampToValueAtTime(7600, peakTime);
+    lp.Q.value = 0.16;
+
+    presence.type = 'peaking';
+    presence.frequency.setValueAtTime(980, now);
+    presence.frequency.exponentialRampToValueAtTime(3300, peakTime);
+    presence.Q.value = 0.34;
+    presence.gain.value = 2.2;
+
+    const makeOsc = ({ type, startFreq, endFreq, start = 0, stop = duration, gain = 0.045, detune = 0 }) => {
+      const t0 = now + start;
+      const t1 = now + stop;
+      const osc = ctx.createOscillator();
+      const amp = ctx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(startFreq, t0);
+      osc.frequency.exponentialRampToValueAtTime(Math.max(1, endFreq), Math.max(t0 + 0.08, t1 - 0.02));
+      osc.detune.setValueAtTime(detune, t0);
+      amp.gain.setValueAtTime(0.0001, t0);
+      amp.gain.exponentialRampToValueAtTime(gain * 0.18, t0 + 0.08);
+      amp.gain.linearRampToValueAtTime(gain * 0.58, now + duration * 0.66);
+      amp.gain.linearRampToValueAtTime(gain, peakTime);
+      amp.gain.exponentialRampToValueAtTime(0.0001, now + duration + 0.14);
+      osc.connect(amp);
+      amp.connect(bus);
+      osc.start(t0);
+      osc.stop(now + duration + 0.18);
+    };
+
+    makeOsc({ type: 'sine', startFreq: 73.42, endFreq: 174.61, gain: 0.052, detune: -2 });
+    makeOsc({ type: 'triangle', startFreq: 146.83, endFreq: 392.00, start: 0.040, gain: 0.043, detune: 3 });
+    makeOsc({ type: 'sine', startFreq: 293.66, endFreq: 880.00, start: 0.150, gain: 0.032, detune: -4 });
+    makeOsc({ type: 'sine', startFreq: 587.33, endFreq: 1760.00, start: duration * 0.43, gain: 0.022, detune: 5 });
+    makeOsc({ type: 'sine', startFreq: 1174.66, endFreq: 2793.83, start: duration * 0.68, gain: 0.014, detune: -6 });
+
+    const air = ctx.createBufferSource();
+    const airFilter = ctx.createBiquadFilter();
+    const airAmp = ctx.createGain();
+    air.buffer = createNoiseBuffer(ctx, duration + 0.18);
+    airFilter.type = 'bandpass';
+    airFilter.frequency.setValueAtTime(300, now);
+    airFilter.frequency.exponentialRampToValueAtTime(1450, now + duration * 0.52);
+    airFilter.frequency.exponentialRampToValueAtTime(5200, peakTime);
+    airFilter.Q.value = 0.10;
+    airAmp.gain.setValueAtTime(0.0001, now);
+    airAmp.gain.linearRampToValueAtTime(0.010, now + duration * 0.32);
+    airAmp.gain.linearRampToValueAtTime(0.028, now + duration * 0.70);
+    airAmp.gain.linearRampToValueAtTime(0.052, peakTime);
+    airAmp.gain.exponentialRampToValueAtTime(0.0001, now + duration + 0.12);
+
+    air.connect(airFilter);
+    airFilter.connect(airAmp);
+    airAmp.connect(bus);
+    bus.connect(presence);
+    presence.connect(lp);
+    lp.connect(audioState.master);
+    air.start(now);
+    air.stop(now + duration + 0.16);
   }
 
   function playLaserSwordSfx() {
@@ -1680,13 +1752,13 @@
     const airFilter = ctx.createBiquadFilter();
 
     bus.gain.setValueAtTime(0.0001, now);
-    bus.gain.exponentialRampToValueAtTime(0.105, now + 0.080);
-    bus.gain.exponentialRampToValueAtTime(0.055, now + duration * 0.62);
+    bus.gain.exponentialRampToValueAtTime(0.044, now + 0.080);
+    bus.gain.linearRampToValueAtTime(0.080, now + duration * 0.70);
     bus.gain.exponentialRampToValueAtTime(0.0001, now + duration + 0.24);
 
     lp.type = 'lowpass';
-    lp.frequency.setValueAtTime(3200, now);
-    lp.frequency.exponentialRampToValueAtTime(1650, now + duration * 0.85);
+    lp.frequency.setValueAtTime(1450, now);
+    lp.frequency.exponentialRampToValueAtTime(4200, now + duration * 0.85);
     lp.Q.value = 0.20;
 
     body.type = 'peaking';
@@ -1706,20 +1778,20 @@
     humA.type = 'triangle';
     humB.type = 'sine';
     humC.type = 'sine';
-    humA.frequency.setValueAtTime(86, now);
-    humA.frequency.exponentialRampToValueAtTime(68, now + duration * 0.80);
-    humB.frequency.setValueAtTime(129, now);
-    humB.frequency.exponentialRampToValueAtTime(103, now + duration * 0.82);
-    humC.frequency.setValueAtTime(172, now);
-    humC.frequency.exponentialRampToValueAtTime(136, now + duration * 0.84);
+    humA.frequency.setValueAtTime(68, now);
+    humA.frequency.exponentialRampToValueAtTime(92, now + duration * 0.80);
+    humB.frequency.setValueAtTime(103, now);
+    humB.frequency.exponentialRampToValueAtTime(138, now + duration * 0.82);
+    humC.frequency.setValueAtTime(136, now);
+    humC.frequency.exponentialRampToValueAtTime(184, now + duration * 0.84);
     humMix.gain.value = 0.34;
 
     const ignition = ctx.createOscillator();
     const ignitionAmp = ctx.createGain();
     ignition.type = 'sine';
-    ignition.frequency.setValueAtTime(64, now);
-    ignition.frequency.exponentialRampToValueAtTime(252, now + 0.20);
-    ignition.frequency.exponentialRampToValueAtTime(112, now + 0.42);
+    ignition.frequency.setValueAtTime(72, now);
+    ignition.frequency.exponentialRampToValueAtTime(238, now + 0.24);
+    ignition.frequency.exponentialRampToValueAtTime(338, now + 0.42);
     ignitionAmp.gain.setValueAtTime(0.0001, now);
     ignitionAmp.gain.exponentialRampToValueAtTime(0.080, now + 0.060);
     ignitionAmp.gain.exponentialRampToValueAtTime(0.0001, now + 0.50);
@@ -1728,8 +1800,8 @@
     const noiseAmp = ctx.createGain();
     noise.buffer = createNoiseBuffer(ctx, duration + 0.32);
     noiseAmp.gain.setValueAtTime(0.0001, now);
-    noiseAmp.gain.exponentialRampToValueAtTime(0.058, now + 0.085);
-    noiseAmp.gain.exponentialRampToValueAtTime(0.018, now + duration * 0.78);
+    noiseAmp.gain.exponentialRampToValueAtTime(0.018, now + 0.085);
+    noiseAmp.gain.linearRampToValueAtTime(0.034, now + duration * 0.78);
     noiseAmp.gain.exponentialRampToValueAtTime(0.0001, now + duration + 0.22);
 
     humA.connect(humMix);
@@ -2318,7 +2390,11 @@
     state.victoryDanceSeed = currentLevel().id * 9973;
     state.victoryDanceStarted = true;
     playVictoryBeamSfx();
-    playLaserSwordSfx();
+    // Keep the blade hum after the travelling-beam crescendo so it cannot
+    // make the beam animation sound like it is falling downward.
+    window.setTimeout(() => {
+      if (state.solved && state.mode === 'play') playLaserSwordSfx();
+    }, state.victoryDuration + 110);
   }
 
   function showCompleteSoon() {
@@ -2947,13 +3023,18 @@
     drawBackground(now);
     drawBoardFrame(now);
     drawGrid(now);
+
+    // Beam layers must remain below gameplay objects.
+    // The battery/source is drawn after the static beam, the crescendo travel beam,
+    // and victory beam particles so the beam never visually sits on top of it.
     drawBeam();
-    drawSource();
+    drawVictoryBeam(now);
+
     if (!state.solved) drawTarget(now);
     for (const mirror of state.mirrorStates) drawMirror(now, mirror);
     drawTapCue(now);
-    drawVictoryBeam(now);
     drawVictoryDance(now);
+    drawSource();
     if (state.solved) drawTarget(now);
     flush();
 
