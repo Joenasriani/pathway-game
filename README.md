@@ -1,15 +1,15 @@
 # Pathway
 
-**Historical name:** Rootlight  
+**Previous name:** Rootlight  
 **Status:** original 30-level WebGL light-reflection puzzle  
 **Play:** https://pathway-game.vercel.app/  
 **itch.io:** https://joenasr.itch.io/pathway  
 **Creator:** Joe Nasr  
-**Creator identity:** https://joe-nasr-signals.vercel.app/v2/
+**Creator profile:** https://joe-nasr-signals.vercel.app/v2/
 
 Pathway is a 30-level browser puzzle built around one spatial mechanic: rotating glass elements changes the route of a light beam. Each level asks the player to read the scene, change lens angles and construct a valid optical path until the target is illuminated.
 
-Pathway and Rootlight refer to the same game lineage.
+Pathway was previously developed under the name Rootlight. Both names refer to the same game.
 
 ## Game
 
