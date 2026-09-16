@@ -1,41 +1,52 @@
-# Pathway
+# Pathway — Vercel Ready Build
 
-**Previous name:** Rootlight  
-**Status:** original 30-level WebGL light-reflection puzzle  
-**Play:** https://pathway-game.vercel.app/  
-**itch.io:** https://joenasr.itch.io/pathway  
-**Creator:** Joe Nasr  
-**Creator profile:** https://joe-nasr-signals.vercel.app/v2/
+Static WebGL laser puzzle game.
 
-Pathway is a 30-level browser puzzle built around one spatial mechanic: rotating glass elements changes the route of a light beam. Each level asks the player to read the scene, change lens angles and construct a valid optical path until the target is illuminated.
+## Included
 
-Pathway was previously developed under the name Rootlight. Both names refer to the same game.
+- `index.html` — app shell
+- `style.css` — responsive UI, no-old-bar glass reflection loader, glass styling
+- `main.js` — WebGL renderer, 30 levels, audio, SFX, victory effects
+- `manifest.json` — web app metadata
+- `icon.svg` — browser/app icon
+- `music/rotating-puzzle-room.mp3` — background music
+- `vercel.json` — Vercel configuration
+- `package.json` — build metadata and local start script
 
-## Game
+## Vercel settings
 
-- Genre: puzzle / logic
-- Platform: web browser
-- Rendering: WebGL
-- Levels: 30
-- Input: mouse and touch
-- Status: playable browser build
+Use these if Vercel asks:
 
-## Source structure
+- Framework Preset: `Other`
+- Build Command: `npm run build`
+- Output Directory: `.`
+- Install Command: default
 
-- `index.html`: game shell and search metadata
-- `style.css`: responsive interface and visual system
-- `main.js`: renderer, level logic, audio, effects and progression
-- `manifest.json`: web app metadata
-- `icon.svg`: browser/app icon
-- `music/rotating-puzzle-room.mp3`: background music
+## Deploy through Vercel dashboard
 
-## Run locally
+1. Upload these files to a GitHub repository.
+2. Open Vercel and choose **Add New Project**.
+3. Import the repository.
+4. Use the settings above.
+5. Deploy.
+
+## Deploy through Vercel CLI
+
+```bash
+npm install -g vercel
+vercel
+vercel --prod
+```
+
+## Local test
 
 ```bash
 npm run build
 npm start
 ```
 
-Music begins after player interaction because browser autoplay policies prevent automatic audio playback before input.
+Then open the local URL printed by `serve`.
 
-Existing branches and historical files are retained as development history.
+## Audio note
+
+Music starts after the player clicks **Set the Beam**. This is intentional because browsers block autoplay audio until user interaction.
