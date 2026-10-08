@@ -4,8 +4,9 @@
   "private": true,
   "description": "Pathway — a static WebGL laser puzzle game ready for Vercel deployment.",
   "scripts": {
-    "build": "node -e \"const fs=require('fs'); for (const f of ['index.html','main.js','style.css','music/rotating-puzzle-room.mp3']) { if (!fs.existsSync(f)) throw new Error(f + ' missing'); } console.log('Static Vercel build OK — no bundling required.');\"",
-    "start": "npx serve ."
+    "build": "npm test && node -e \"const fs=require('fs'); for (const f of ['index.html','main.js','style.css','music/rotating-puzzle-room.mp3']) { if (!fs.existsSync(f)) throw new Error(f + ' missing'); } console.log('Static Vercel build OK — no bundling required.');\"",
+    "start": "npx serve .",
+    "test": "node test-levels.cjs"
   },
   "engines": {
     "node": ">=18"
