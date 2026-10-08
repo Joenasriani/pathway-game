@@ -1422,6 +1422,31 @@
     return audioState.ctx;
   }
 
+  // Choose one soundtrack per new game session, avoiding the previous selection.
+  // Keep browser audio capability checks: M4A support differs by platform.
+  const musicTracks = [
+    'music/rotating-puzzle-room.mp3',
+    'music/Rotating Puzzle Room (v3).mp3',
+    'music/Rotating Puzzle Room.m4a',
+    'music/Rotating Puzzle Room (v2).m4a'
+  ];
+  function selectSessionMusic() {
+    if (!bgMusic) return;
+    const playable = musicTracks.filter(path => {
+      const type = path.toLowerCase().endsWith('.m4a') ? 'audio/mp4' : 'audio/mpeg';
+      return bgMusic.canPlayType(type) !== '';
+    });
+    if (!playable.length) return; // Preserve the HTML default when no format is supported.
+    const previous = safeLocalStorageGet('pathwayLastMusicTrack', '');
+    const candidates = playable.filter(path => path !== previous);
+    const pool = candidates.length ? candidates : playable;
+    const selected = pool[Math.floor(Math.random() * pool.length)];
+    bgMusic.pause();
+    bgMusic.src = encodeURI(selected);
+    bgMusic.load();
+    safeLocalStorageSet('pathwayLastMusicTrack', selected);
+  }
+
   function configureMusicElement() {
     if (!bgMusic) return;
     bgMusic.loop = true;
@@ -2359,6 +2384,7 @@
   function startGame() {
     ensureAudio();
     playStartSfx();
+    selectSessionMusic();
     startMusic({ restart: true });
     state.mode = 'play';
     startScreen.classList.add('hidden');
