@@ -7,6 +7,14 @@ Static WebGL light-reflection puzzle built around rotating glass lenses to route
 - Play: https://joenasr.itch.io/pathway
 - Deployment: https://pathway-game.vercel.app/
 
+## Contribute and platform plans
+
+- [Contributor guide](CONTRIBUTING.md) — focused ways to improve the game and verify changes
+- [Android / iOS roadmap](MOBILE_ROADMAP.md) — shared web engine, platform gates and device-testing requirements
+- [Asset and licensing status](ASSET_RIGHTS.md) — unverified soundtrack, fonts and source-code license
+
+The repository is public, but no explicit code license has yet been confirmed. Mobile app packaging is planned, **not implemented**.
+
 ## Repository scope
 
 Pathway is a client-side browser game with no application framework and no rendering library dependency. The game engine uses the browser's WebGL API directly.
