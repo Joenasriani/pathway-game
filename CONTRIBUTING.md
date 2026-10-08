@@ -1,30 +1,52 @@
 # Contributing to Pathway
 
-Pathway is a browser-based WebGL reflection puzzle game. The goal is to improve the playable game without losing its original artwork, controls, sound, visual style, or 30 authored levels.
+Pathway is a browser-based WebGL reflection puzzle game. **The current game is the starting point, not the ceiling.**
 
-## Start here
+## Open innovation policy
+
+All ideas are welcome when they can deliver a meaningful improvement, experiment, feature, design, tool, performance gain, accessibility gain, or useful extension. Contributors may challenge existing mechanics, graphics, architecture, platforms, and interaction patterns. The suggestions below are examples, **not limits**.
+
+We assess a proposal by its potential and demonstrated value, not by how closely it resembles the existing game.
+
+- Explain the user or developer benefit, or state a testable hypothesis for an experiment.
+- Supply a working prototype, demonstration, test, benchmark, design study, or clear evaluation plan appropriate to the proposal.
+- Describe tradeoffs, compatibility impact, and how to reproduce results.
+- Keep the released game functional while experimenting: disruptive changes can be developed independently and reviewed before integration.
+- Separate experimental claims from verified results. A successful proposal need not preserve every existing design decision if the redesign has a compelling, demonstrated benefit.
+- Respect third-party licensing and asset rights.
+
+An unproven but promising experiment is welcome for exploration; it is not automatically approved for release. Maintainers decide whether, when, and how to integrate it.
+
+## Getting started
+
 1. Play the current build: https://pathway-game.vercel.app/
-2. Read README.md for the game structure, lens states, and beam simulation.
+2. Review README.md for reflection rules, game structure, and beam simulation.
 3. Clone the repository and serve its static files locally (for example `npx serve .`).
-4. Before proposing a change, run `npm test` and `npm run build`. These are source-level checks, **not** substitutes for browser gameplay testing.
-5. For a code change, play the affected levels with mouse and touch controls, and note which devices/browsers were actually tested.
+4. Run `npm test` and `npm run build` before submitting changes. These are source checks, **not** substitutes for actual browser tests.
+5. For behavior changes, report mouse/touch devices and browsers actually tested.
 
-## Useful contributions
-- Reproducible rendering, input, audio, and progression bug fixes
-- Puzzle validation, regression tests, and level-editor prototypes
-- Optional new levels without rewriting the existing authored levels
-- Accessibility and responsive touch improvements
-- Performance improvements supported by measurements
-- Android and iOS feasibility investigations and device test reports
+## Possible contributions (non-exhaustive)
 
-For mobile-specific work, see MOBILE_ROADMAP.md. Native packaging is **not yet implemented or approved** in this repo.
+- New puzzles, mechanics, interactive systems, or alternative game modes
+- Visual direction, animation, rendering, sound interaction, and UX experiments
+- Editors, procedural tools, level generators, and developer APIs
+- Performance, memory, battery efficiency, accessibility, and localization
+- New platforms, including Android/iOS investigations and device prototypes
+- Gameplay fixes, test automation, and progression improvements
+- Entirely new approaches backed by usable prototypes or evidence
 
-## Pull requests
-Keep each change focused. Explain the problem, the code changed, test commands and results, and visual/gameplay evidence when appropriate. Do not claim a device was tested unless it was. Do not modify existing puzzle solutions, music, fonts, or visual identity incidentally.
+For platform work, see MOBILE_ROADMAP.md; no native packaging is currently verified in this repository.
 
-## Assets and licenses
-The source repository is public but has no verified repository-wide open-source license yet. **Public access is not a grant of permission to reuse or redistribute the code or assets.** Before accepting contributed code, agree on the licensing terms with the maintainer.
+## Proposals and pull requests
 
-The soundtrack `music/rotating-puzzle-room.mp3` has unverified origin and permissions. Do not reuse, sublicense, replace, or redistribute it independently. The font and other asset rights also require confirmation. See ASSET_RIGHTS.md.
+Open a GitHub issue describing the idea, expected benefit, and a lightweight method to evaluate it. For a pull request, explain what changed, why it matters, what was tested, and any known limitations. Focused PRs are easier to review, but larger innovations can be scoped and discussed in stages.
 
-Use GitHub issues to propose work or report bugs. Do not submit copyrighted third-party material without documented rights.
+Do not silently replace existing assets or break shipped functionality. When intentionally proposing a redesign, make the tradeoffs explicit and provide a reviewable demonstration. Do not claim hardware testing or performance improvements without evidence.
+
+## Licensing and assets
+
+The repository is public but has no verified repository-wide open-source license. **Public access does not grant permission to reuse or redistribute the code or assets.** Confirm contributor and distribution rights with the maintainer before incorporating contributions.
+
+The music's source links and commercial/redistribution rights remain under investigation; do not treat any of the bundled MP3/M4A versions as freely reusable or sublicense them. The font and other asset rights also require verification. See ASSET_RIGHTS.md.
+
+Use GitHub issues to propose improvements or report bugs, and do not submit unlicensed third-party material.
